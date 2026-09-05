@@ -21,14 +21,13 @@ export const botConfig = {
     // 3 = Watching
     // 4 = Custom
     // 5 = Competing
-      activities: [
+       activities: [
     {
-      name: "[+] bot",  // C'est ce texte qui s'affichera après "Joue à" !
-      state: "",        // Tu peux laisser ça vide pour le mode "Joue à"
-      type: 0           // 0 signifie bien "Playing" (Joue à)
-      }
-    ],
-  },
+      name: "[+] bot",
+      type: 0 // 0 = Playing (Joue à)
+    }
+  ],
+
 
   // =========================
   // COMMAND BEHAVIOR
