@@ -21,12 +21,14 @@ export const botConfig = {
     // 3 = Watching
     // 4 = Custom
     // 5 = Competing
-       activities: [
-    {
-      name: "[+] bot",
-      type: 0 // 0 = Playing (Joue à)
-    }
-  ],
+    activities: [
+      {
+        name: "Custom Status", // required by Discord API, not shown in the client
+        state: "[+] bot",     // this is what people actually see
+        type: 4,               // Custom
+      },
+    ],
+  },
 
 
   // =========================
