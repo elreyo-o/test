@@ -9,26 +9,14 @@ export const botConfig = {
   // - "idle"      = yellow moon
   // - "dnd"       = red do-not-disturb
   // - "invisible" = appears offline
-  presence: {
-    // Current online state shown on Discord.
+    presence: {
+    // Statut en ligne par défaut au démarrage
     status: "online",
 
-    // Activity lines shown under the bot name.
-    // `type` number mapping from Discord:
-    // 0 = Playing
-    // 1 = Streaming
-    // 2 = Listening
-    // 3 = Watching
-    // 4 = Custom
-    // 5 = Competing
-    activities: [
-      {
-         name: "v.1", // required by Discord API, not shown in the client     // this is what people actually see
-        type: 1,
-        url: "https://twitch.tv"// Custom
-      },
-    ],
+    // 🟢 ON VIDE LES ACTIVITÉS PAR DÉFAUT POUR LAISSER TON CODE PYTHON TOUT GÉRER
+    activities: [],
   },
+
 
 
   // =========================
