@@ -2,7 +2,7 @@ import { ActivityType } from 'discord.js';
 
 export default {
   name: 'activity',
-  description: "Modifie l'activité et force le statut de streaming violet",
+  description: "Modifie le statut personnalisé du bot",
   aliases: ['act'],
 
   run: async (client, message, args) => {
@@ -13,9 +13,8 @@ export default {
     if (!args || args.length < 1) {
       return message.channel.send(
         `❌ **Utilisation incorrecte. Exemples :**\n` +
-        `• \`+activity streaming .gg/astryn\` ➔ 🟣 **Allumer le Badge Violet**\n` +
-        `• \`+activity playing Valorant\` ➔ 🟢 **Joue à**\n` +
-        `• \`+activity clear\` ➔ 🔄 **Réinitialiser**`
+        `• \`+activity streaming .gg/astryn\` ➔ Text personnalisé avec émoji\n` +
+        `• \`+activity clear\` ➔ Réinitialiser`
       );
     }
 
@@ -23,51 +22,40 @@ export default {
 
     if (subActivity === 'clear') {
       await client.user.setPresence({ activities: [], status: 'online' });
-      return message.channel.send("✅ L'activité du bot a été entièrement réinitialisée.");
+      return message.channel.send("✅ L'activité du bot a été réinitialisée.");
     }
 
     const statusText = args.slice(1).join(" ").trim();
     if (!statusText) {
-      return message.channel.send(`❌ Tu dois spécifier un texte après la sous-commande \`${subActivity}\`.`);
+      return message.channel.send(`❌ Tu dois spécifier un texte après la sous-commande.`);
     }
 
     try {
-      // 🟢 ÉTAPE CRITIQUE : On réinitialise complètement l'activité pour briser le cache de l'hébergeur
-      await client.user.setPresence({ activities: [], status: 'invisible' });
+      let finalText = statusText;
       
-      let activityPayload = {
-        name: statusText,
-        type: ActivityType.Playing
-      };
-      
-      let statusColor = 'online';
-
+      // Si tu demandes "streaming", on simule le live avec un émoji violet visible par tout le monde
       if (subActivity === 'streaming') {
-        // 🟣 Forçage strict de l'URL Twitch : indispensable pour allumer le badge violet sur Discord
-        activityPayload = {
-          name: statusText,
-          type: ActivityType.Streaming,
-          url: "https://twitch.tv"
-        };
-      } else if (subActivity === 'idle') {
-        statusColor = 'idle';
-      } else if (subActivity === 'dnd') {
-        statusColor = 'dnd';
+        finalText = `🟣 En Live : ${statusText}`;
+      } else if (subActivity === 'playing') {
+        finalText = `🎮 Joue à : ${statusText}`;
+      } else if (subActivity === 'listening') {
+        finalText = `🎵 Écoute : ${statusText}`;
       }
 
-      // Appliquer l'activité finale
+      // Appliquer le statut Custom (Bypasse les restrictions d'Intents de Discord)
       await client.user.setPresence({
-        activities: [activityPayload],
-        status: statusColor
+        activities: [{
+          name: 'custom',
+          type: ActivityType.Custom,
+          state: finalText
+        }],
+        status: 'online'
       });
 
-      const emojiMap = { streaming: '🟣', playing: '🟢', idle: '🟡', dnd: '🔴' };
-      const currentEmoji = emojiMap[subActivity] || '🟢';
-
-      return message.channel.send(`${currentEmoji} Statut mis à jour avec succès ! L'activité **${statusText}** a été poussée.`);
+      return message.channel.send(`✅ Statut mis à jour sur : **${finalText}** !`);
 
     } catch (error) {
-      return message.channel.send(`❌ Erreur lors de la synchronisation : \`${error.message}\``);
+      return message.channel.send(`❌ Erreur lors du changement d'activité : \`${error.message}\``);
     }
   }
 };
