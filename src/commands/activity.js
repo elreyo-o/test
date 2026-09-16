@@ -1,72 +1,80 @@
-import { ApplicationCommandOptionType, ActivityType } from 'discord.js';
+import { ActivityType } from 'discord.js';
 
 export default {
   name: 'activity',
-  description: "Modifie l'activité et la couleur du statut du bot",
-  userPermissions: ['Administrator'], // Seuls les admins peuvent l'utiliser
-  options: [
-    {
-      name: 'type',
-      description: "Le type d'activité (playing, streaming, listening, watching, competing, clear)",
-      type: ApplicationCommandOptionType.String,
-      required: true,
-      choices: [
-        { name: 'Playing (Vert)', value: 'playing' },
-        { name: 'Streaming (🟣 Violet)', value: 'streaming' },
-        { name: 'Listening (Vert)', value: 'listening' },
-        { name: 'Watching (Vert)', value: 'watching' },
-        { name: 'Competing (Vert)', value: 'competing' },
-        { name: 'Clear (Réinitialiser)', value: 'clear' }
-      ]
-    },
-    {
-      name: 'message',
-      description: "Le texte à afficher sous le nom du bot",
-      type: ApplicationCommandOptionType.String,
-      required: false
+  description: "Modifie l'activité et la couleur du statut du bot via préfixe",
+  aliases: ['act'], // Permet de faire +act aussi
+
+  run: async (client, message, args) => {
+    // Sécurité : Seuls les membres avec la permission Administrateur peuvent l'utiliser
+    if (!message.member.permissions.has('Administrator')) {
+      return message.channel.send("❌ Vous devez être **Administrateur** pour modifier l'activité du bot.");
     }
-  ],
 
-  run: async (client, interaction) => {
-    const type = interaction.options.getString('type');
-    const message = interaction.options.getString('message');
+    if (!args[0]) {
+      return message.channel.send(
+        `❌ **Utilisation incorrecte. Exemples :**\n` +
+        `• \`${client.config?.commands?.prefix || '+'}activity streaming .gg/astryn\` ➔ 🟣 **Badge Violet**\n` +
+        `• \`${client.config?.commands?.prefix || '+'}activity playing Valorant\` ➔ 🟢 **Joue à**\n` +
+        `• \`${client.config?.commands?.prefix || '+'}activity listening Spotify\` ➔ 🟢 **Écoute**\n` +
+        `• \`${client.config?.commands?.prefix || '+'}activity watching un film\` ➔ 🟢 **Regarde**\n` +
+        `• \`${client.config?.commands?.prefix || '+'}activity clear\` ➔ 🔄 **Réinitialiser**`
+      );
+    }
 
-    if (type === 'clear') {
+    const subActivity = args[0].toLowerCase();
+
+    // --- SOUS-COMMANDE : CLEAR ---
+    if (subActivity === 'clear') {
       await client.user.setPresence({ activities: [], status: 'online' });
-      return interaction.reply({ content: "✅ L'activité du bot a été entièrement réinitialisée.", ephemeral: true });
+      return message.channel.send("✅ L'activité du bot a été entièrement réinitialisée.");
     }
 
-    if (!message) {
-      return interaction.reply({ content: "❌ Tu dois spécifier un message pour cette activité !", ephemeral: true });
+    // Récupérer le reste du message pour le statut
+    const statusText = args.slice(1).join(" ").strip ? args.slice(1).join(" ").trim() : args.slice(1).join(" ");
+    if (!statusText) {
+      return message.channel.send(`❌ Tu dois spécifier un texte après la sous-commande \`${subActivity}\`.`);
     }
 
     try {
       let activityType;
       let url = undefined;
+      let statusColor = 'online';
 
-      if (type === 'streaming') {
+      if (subActivity === 'streaming') {
         activityType = ActivityType.Streaming;
         url = "https://twitch.tv"; // Obligatoire pour le badge violet
-      } else if (type === 'listening') {
+      } else if (subActivity === 'listening') {
         activityType = ActivityType.Listening;
-      } else if (type === 'watching') {
+      } else if (subActivity === 'watching') {
         activityType = ActivityType.Watching;
-      } else if (type === 'competing') {
+      } else if (subActivity === 'competing') {
         activityType = ActivityType.Competing;
-      } else {
+      } else if (subActivity === 'playing') {
         activityType = ActivityType.Playing;
+      } else if (subActivity === 'idle') {
+        activityType = ActivityType.Playing;
+        statusColor = 'idle'; // Devient jaune
+      } else if (subActivity === 'dnd') {
+        activityType = ActivityType.Playing;
+        statusColor = 'dnd'; // Devient rouge
+      } else {
+        return message.channel.send("❌ Type d'activité inconnu. Options : `playing`, `streaming`, `listening`, `watching`, `idle`, `dnd`, `clear`.");
       }
 
-      // Application du statut en direct
+      // Application immédiate de la présence sur l'API Discord
       await client.user.setPresence({
-        activities: [{ name: message, type: activityType, url: url }],
-        status: 'online'
+        activities: [{ name: statusText, type: activityType, url: url }],
+        status: statusColor
       });
 
-      return interaction.reply({ content: `✅ Statut mis à jour avec succès sur : **${message}** !`, ephemeral: true });
+      const emojiMap = { streaming: '🟣', playing: '🟢', idle: '🟡', dnd: '🔴' };
+      const currentEmoji = emojiMap[subActivity] || '🟢';
 
-    except (error) {
-      return interaction.reply({ content: `❌ Erreur : ${error.message}`, ephemeral: true });
+      return message.channel.send(`${currentEmoji} Statut mis à jour avec succès sur : **${statusText}** !`);
+
+    } catch (error) {
+      return message.channel.send(`❌ Erreur lors du changement d'activité : \`${error.message}\``);
     }
   }
 };
