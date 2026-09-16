@@ -1,7 +1,7 @@
 import { ActivityType, PermissionFlagsBits } from 'discord.js';
 
 export default {
-  name: 'activity',
+  name: 'activit',
   description: "Force le statut de streaming violet officiel",
   category: 'utility',
   userPermissions: [PermissionFlagsBits.Administrator],
